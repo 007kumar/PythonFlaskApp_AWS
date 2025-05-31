@@ -1,0 +1,45 @@
+pipeline {
+  agent any
+
+  environment {
+    AWS_REGION = 'us-west-2'
+    ECR_REPO = '<your_ecr_repo_url>'
+    IMAGE_TAG = "latest"
+    CLUSTER_NAME = 'flask-eks-cluster'
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        git 'https://github.com/youruser/flask-eks-cicd.git'
+      }
+    }
+
+    stage('Build Docker Image') {
+      steps {
+        dir('flask-app') {
+          script {
+            sh "aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO"
+            sh "docker build -t $ECR_REPO:$IMAGE_TAG ."
+          }
+        }
+      }
+    }
+
+    stage('Push to ECR') {
+      steps {
+        sh "docker push $ECR_REPO:$IMAGE_TAG"
+      }
+    }
+
+    stage('Deploy to EKS') {
+      steps {
+        script {
+          sh "aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME"
+          sh "sed 's|<ECR_REPO_URL>|$ECR_REPO|' k8s/deployment.yaml | kubectl apply -f -"
+          sh "kubectl apply -f k8s/service.yaml"
+        }
+      }
+    }
+  }
+}
