@@ -2,7 +2,7 @@ pipeline {
   agent any
 
   environment {
-    AWS_REGION = 'us-west-2'
+    AWS_REGION = 'us-east-e1'
     ECR_REPO = '<your_ecr_repo_url>'
     IMAGE_TAG = "latest"
     CLUSTER_NAME = 'flask-eks-cluster'
