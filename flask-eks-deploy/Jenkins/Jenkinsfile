@@ -1,45 +1,42 @@
 pipeline {
-  agent any
+    agent any
 
-  environment {
-    AWS_REGION = 'us-east-e1'
-    ECR_REPO = '<your_ecr_repo_url>'
-    IMAGE_TAG = "latest"
-    CLUSTER_NAME = 'flask-eks-cluster'
-  }
-
-  stages {
-    stage('Checkout') {
-      steps {
-        git 'https://github.com/youruser/flask-eks-cicd.git'
-      }
+    environment {
+        AWS_REGION = 'us-east-1'
+        ECR_REPO = '975050024946.dkr.ecr.us-east-1.amazonaws.com/flask-app-shivkumar'
+        IMAGE_TAG = 'latest'
     }
 
-    stage('Build Docker Image') {
-      steps {
-        dir('flask-app') {
-          script {
-            sh "aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO"
-            sh "docker build -t $ECR_REPO:$IMAGE_TAG ."
-          }
+    stages {
+        stage('Checkout') {
+            steps {
+                git 'https://github.com/007kumar/PythonFlaskApp_AWS.git'
+            }
         }
-      }
-    }
 
-    stage('Push to ECR') {
-      steps {
-        sh "docker push $ECR_REPO:$IMAGE_TAG"
-      }
-    }
-
-    stage('Deploy to EKS') {
-      steps {
-        script {
-          sh "aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME"
-          sh "sed 's|<ECR_REPO_URL>|$ECR_REPO|' k8s/deployment.yaml | kubectl apply -f -"
-          sh "kubectl apply -f k8s/service.yaml"
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t flask-app-shivkumar .'
+                sh 'docker tag flask-app-shivkumar:latest $ECR_REPO:$IMAGE_TAG'
+            }
         }
-      }
+
+        stage('Push to ECR') {
+            steps {
+                withAWS(region: "${AWS_REGION}", credentials: 'aws-credentials') {
+                    sh 'aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO'
+                    sh 'docker push $ECR_REPO:$IMAGE_TAG'
+                }
+            }
+        }
+
+        stage('Deploy to EKS') {
+            steps {
+                withAWS(region: "${AWS_REGION}", credentials: 'aws-credentials') {
+                    sh 'kubectl apply -f k8s-manifests/deployment.yaml'
+                    sh 'kubectl apply -f k8s-manifests/service.yaml'
+                }
+            }
+        }
     }
-  }
 }
