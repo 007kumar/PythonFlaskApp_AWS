@@ -1,23 +1,30 @@
-provider "aws" {
-  region = var.region
-}
+module "eks" {
+  source  = "terraform-aws-modules/eks/aws"
+  version = "20.11.0"  # or latest
 
-module "vpc" {
-  source  = "terraform-aws-modules/vpc/aws"
-  version = "3.14.2"
+  cluster_enabled_log_types = []
+  create_cloudwatch_log_group = false
 
-  name = "flask-vpc"
-  cidr = "10.0.0.0/16"
+  cluster_name    = "shivkumar-eks-cluster"
+  cluster_version = "1.27"
+  vpc_id          = var.vpc_id
+  subnet_ids      = var.private_subnets
 
-  azs             = ["${var.region}a", "${var.region}b", "${var.region}c"]
-  private_subnets = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
-  public_subnets  = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
+  create_kms_key             = false
+  attach_cluster_encryption_policy = false
+  cluster_encryption_config        = {}
 
-  enable_nat_gateway = true
-  single_nat_gateway = true
+  eks_managed_node_groups = {
+    default = {
+      instance_types = ["t3.medium"]
+      min_size       = 1
+      max_size       = 2
+      desired_size   = 1
+    }
+  }
 
   tags = {
-    Terraform = "true"
     Environment = "dev"
+    Terraform   = "true"
   }
 }
