@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: flask-app
+  name: flask-app-shivkumar
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: flask
+      app: flask-app-shivkumar
   template:
     metadata:
       labels:
-        app: flask
+        app: flask-app-shivkumar
     spec:
       containers:
-      - name: flask
-        image: <ECR_REPO_URL>:latest  # To be replaced dynamically in Jenkins
+      - name: flask-app-shivkumar
+        image: 975050024946.dkr.ecr.us-east-1.amazonaws.com/flask-app-shivkumar:latest
         ports:
         - containerPort: 5000
