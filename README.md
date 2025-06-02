@@ -41,7 +41,7 @@ This project automates the deployment of a **Python Flask web service** to an **
 ### 1️⃣ Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/flask-eks-cicd.git
+1) git clone https://github.com/007kumar/PythonFlaskApp_AWS.git
 
 ---
 ##
